@@ -1,0 +1,23 @@
+{
+  "name": "invite-platform",
+  "version": "1.0.0",
+  "description": "منصة إدارة الدعوات - لوحة تحكم للأدمن + صفحة دعوة عامة للمدعوين",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "seed": "node db/seed.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "express-session": "^1.18.0",
+    "better-sqlite3": "^11.3.0",
+    "bcryptjs": "^2.4.3",
+    "multer": "^2.0.0",
+    "csv-parse": "^5.5.6",
+    "ejs": "^3.1.10",
+    "dotenv": "^16.4.5",
+    "uuid": "^9.0.1",
+    "qrcode": "^1.5.4",
+    "node-cron": "^3.0.3"
+  }
+}
