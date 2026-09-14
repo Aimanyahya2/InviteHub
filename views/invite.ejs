@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= event.title %></title>
+  <link rel="stylesheet" href="/public/css/style.css">
+  <% if (tenant && tenant.primary_color) { %>
+    <style>:root { --primary: <%= tenant.primary_color %>; --primary-dark: <%= tenant.primary_color %>; }</style>
+  <% } %>
+</head>
+<body>
+  <div class="invite-wrap">
+    <div class="invite-card">
+      <% if (event.design_image) { %>
+        <img src="<%= event.design_image %>" alt="دعوة" style="width:100%; display:block;">
+      <% } %>
+      <div class="invite-body">
+        <h1><%= event.title %></h1>
+        <div class="details">
+          <% if (event.event_date) { %> التاريخ: <%= event.event_date %><br><% } %>
+          <% if (event.location) { %> الموقع: <%= event.location %><br><% } %>
+          <% if (event.location_map_url) { %>
+            <a href="<%= event.location_map_url %>" target="_blank" style="color:var(--primary); font-weight:700;">عرض الموقع على الخريطة</a>
+          <% } %>
+        </div>
+
+        <div style="display:flex; gap:8px; justify-content:center; margin-bottom:16px;">
+          <a class="btn secondary small" href="/invite/<%= guest.token %>/calendar.ics">أضف للتقويم</a>
+          <% if (event.design_image) { %>
+            <a class="btn secondary small" href="<%= event.design_image %>" download>تحميل الدعوة</a>
+          <% } %>
+        </div>
+
+        <% if (guest.rsvp === 'حضور') { %>
+          <div class="rsvp-result yes">تم تأكيد حضورك، نتشرف بحضوركم</div>
+          <div style="margin-top:16px;">
+            <p class="text-muted" style="margin-bottom:8px;">أظهر هذا الباركود عند الدخول</p>
+            <img src="/invite/<%= guest.token %>/qrcode.png" alt="باركود الدخول" style="width:160px; height:160px;">
+          </div>
+        <% } else if (guest.rsvp === 'اعتذار') { %>
+          <div class="rsvp-result no">تم تسجيل اعتذارك، شكرًا لتواصلكم</div>
+        <% } else { %>
+          <form method="POST" action="/invite/<%= guest.token %>/rsvp" class="rsvp-buttons">
+            <button class="btn" type="submit" name="answer" value="حضور">تأكيد الحضور</button>
+            <button class="btn secondary" type="submit" name="answer" value="اعتذار">اعتذار</button>
+          </form>
+        <% } %>
+      </div>
+      <% if (tenant && tenant.logo_path) { %>
+        <div style="padding:10px; text-align:center; border-top:1px solid var(--border);">
+          <img src="<%= tenant.logo_path %>" alt="<%= tenant.name %>" style="height:22px; opacity:0.8;">
+        </div>
+      <% } %>
+    </div>
+  </div>
+</body>
+</html>

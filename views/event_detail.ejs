@@ -1,0 +1,198 @@
+<%- include('partials/header') %>
+<div class="container">
+  <div class="page-header">
+    <div>
+      <h1><%= event.title %></h1>
+      <div class="text-muted">
+        <% if (event.event_type) { %><span class="pill sent"><%= event.event_type %></span> · <% } %>
+        <%= event.client_name || '' %>
+        <% if (event.event_date) { %> · <%= event.event_date %> <% } %>
+        <% if (event.location) { %> · <%= event.location %> <% } %>
+      </div>
+    </div>
+    <a class="btn secondary" href="/admin">رجوع</a>
+  </div>
+
+  <% if (flash) { %>
+    <div class="flash"><%= flash %></div>
+  <% } %>
+
+  <div class="stats-grid">
+    <div class="stat-box"><div class="label">إجمالي المدعوين</div><div class="value"><%= stats.total %></div></div>
+    <div class="stat-box"><div class="label">تم الإرسال</div><div class="value"><%= stats.sent %></div></div>
+    <div class="stat-box"><div class="label">تأكيد الحضور</div><div class="value"><%= stats.confirmed %></div></div>
+    <div class="stat-box"><div class="label">حضروا فعليًا</div><div class="value"><%= stats.checked_in %> / <%= stats.confirmed %></div></div>
+  </div>
+
+  <div class="actions-row">
+    <a class="btn secondary small" href="/admin/events/<%= event.id %>/export">تصدير تقرير CSV</a>
+    <a class="btn secondary small" href="/admin/events/<%= event.id %>/qrcodes" target="_blank">طباعة كل الباركودات</a>
+    <a class="btn secondary small" href="/admin/events/<%= event.id %>/scan">فتح ماسح الحضور</a>
+    <form class="inline" method="POST" action="/admin/events/<%= event.id %>/type" style="display:flex; gap:4px;">
+      <select name="event_type" onchange="document.getElementById('type-custom-<%= event.id %>').style.display = this.value === '__other__' ? 'inline-block' : 'none';" style="padding:6px 10px;border-radius:8px;border:1px solid var(--border);font-family:inherit;">
+        <option value="">بدون تصنيف</option>
+        <% ['زفاف','خطوبة','تخرج','عيد ميلاد','مؤتمر','اجتماع عمل','فعالية خيرية','مناسبة رسمية'].forEach(t => { %>
+          <option value="<%= t %>" <%= event.event_type === t ? 'selected' : '' %>><%= t %></option>
+        <% }) %>
+        <option value="__other__" <%= event.event_type && !['زفاف','خطوبة','تخرج','عيد ميلاد','مؤتمر','اجتماع عمل','فعالية خيرية','مناسبة رسمية'].includes(event.event_type) ? 'selected' : '' %>>نوع آخر</option>
+      </select>
+      <input type="text" id="type-custom-<%= event.id %>" name="event_type_custom" placeholder="حدد النوع" value="<%= event.event_type && !['زفاف','خطوبة','تخرج','عيد ميلاد','مؤتمر','اجتماع عمل','فعالية خيرية','مناسبة رسمية'].includes(event.event_type) ? event.event_type : '' %>" style="display:<%= event.event_type && !['زفاف','خطوبة','تخرج','عيد ميلاد','مؤتمر','اجتماع عمل','فعالية خيرية','مناسبة رسمية'].includes(event.event_type) ? 'inline-block' : 'none' %>; width:120px; padding:6px 10px; border-radius:8px; border:1px solid var(--border); font-family:inherit;">
+      <button class="btn secondary small" type="submit">حفظ النوع</button>
+    </form>
+    <form class="inline" method="POST" action="/admin/events/<%= event.id %>/status">
+      <select name="status" onchange="this.form.submit()" style="padding:6px 10px;border-radius:8px;border:1px solid var(--border);font-family:inherit;">
+        <option value="مسودة" <%= event.status === 'مسودة' ? 'selected' : '' %>>مسودة</option>
+        <option value="جارية" <%= event.status === 'جارية' ? 'selected' : '' %>>جارية</option>
+        <option value="منتهية" <%= event.status === 'منتهية' ? 'selected' : '' %>>منتهية</option>
+      </select>
+    </form>
+    <form class="inline" method="POST" action="/admin/events/<%= event.id %>/delete" onsubmit="return confirm('تأكيد حذف المناسبة بكل بياناتها؟');">
+      <button class="btn danger small" type="submit">حذف المناسبة</button>
+    </form>
+  </div>
+
+  <div class="tabs-row">
+    <div class="card">
+      <div style="font-weight:700; margin-bottom:10px;">تصميم الدعوة</div>
+      <% if (event.design_image) { %>
+        <img class="design-preview" src="<%= event.design_image %>" alt="تصميم الدعوة">
+      <% } %>
+      <form method="POST" action="/admin/events/<%= event.id %>/design" enctype="multipart/form-data" class="form-grid">
+        <input type="file" name="design" accept="image/*" required>
+        <button class="btn secondary small" type="submit">رفع / تحديث التصميم</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <div style="font-weight:700; margin-bottom:10px;">إضافة مدعو</div>
+      <form method="POST" action="/admin/events/<%= event.id %>/guests" class="form-grid">
+        <input type="text" name="name" placeholder="اسم المدعو" required>
+        <input type="text" name="phone" placeholder="رقم الجوال (مثال: 9665xxxxxxxx)">
+        <button class="btn small" type="submit">إضافة</button>
+      </form>
+      <hr style="border:none; border-top:1px solid var(--border); margin:14px 0;">
+      <form method="POST" action="/admin/events/<%= event.id %>/guests/import" enctype="multipart/form-data" class="form-grid">
+        <label style="margin:0;">استيراد ملف CSV (اسم، جوال)</label>
+        <input type="file" name="file" accept=".csv" required>
+        <button class="btn secondary small" type="submit">استيراد</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="tabs-row">
+    <div class="card">
+      <div style="font-weight:700; margin-bottom:10px;">موعد المناسبة والتذكير التلقائي</div>
+      <form method="POST" action="/admin/events/<%= event.id %>/schedule" class="form-grid">
+        <div>
+          <label>تاريخ ووقت المناسبة الفعلي</label>
+          <input type="datetime-local" name="event_datetime" value="<%= event.event_datetime || '' %>">
+        </div>
+        <div>
+          <label>إرسال تذكير قبل المناسبة بـ</label>
+          <select name="reminder_hours_before">
+            <option value="12" <%= event.reminder_hours_before == 12 ? 'selected' : '' %>>12 ساعة</option>
+            <option value="24" <%= event.reminder_hours_before == 24 ? 'selected' : '' %>>24 ساعة</option>
+            <option value="48" <%= event.reminder_hours_before == 48 ? 'selected' : '' %>>48 ساعة</option>
+            <option value="72" <%= event.reminder_hours_before == 72 ? 'selected' : '' %>>72 ساعة</option>
+          </select>
+        </div>
+        <button class="btn secondary small" type="submit">حفظ</button>
+      </form>
+      <% if (!event.event_datetime) { %>
+        <p class="text-muted" style="margin-top:10px;">لازم تحدد الموعد الفعلي عشان يشتغل التذكير التلقائي.</p>
+      <% } %>
+    </div>
+
+    <div class="card">
+      <div style="font-weight:700; margin-bottom:10px;">رسالة جماعية عبر واتساب</div>
+      <% if (!tenant.wa_phone_number_id) { %>
+        <p class="text-muted">ما فيه ربط واتساب API مفعّل على حسابك بعد. تواصل مع مزوّد المنصة لتفعيله، أو استمر باستخدام زر "إرسال واتساب" اليدوي لكل مدعو بالجدول تحت.</p>
+      <% } else { %>
+        <form method="POST" action="/admin/events/<%= event.id %>/broadcast" class="form-grid">
+          <textarea name="message" rows="3" placeholder="نص الرسالة..." required></textarea>
+          <select name="target">
+            <option value="all">كل المدعوين</option>
+            <option value="confirmed">المؤكدين فقط</option>
+            <option value="pending">اللي ما ردوا بعد</option>
+          </select>
+          <button class="btn small" type="submit">إرسال جماعي</button>
+        </form>
+      <% } %>
+    </div>
+  </div>
+
+  <div class="card">
+    <div style="font-weight:700; margin-bottom:10px;">قائمة المدعوين (<%= guests.length %>)</div>
+    <% if (guests.length === 0) { %>
+      <div class="empty-state">ما فيه مدعوين بعد. أضف مدعو أو استورد ملف CSV.</div>
+    <% } else { %>
+    <table>
+      <thead>
+        <tr>
+          <th>الاسم</th>
+          <th>الجوال</th>
+          <th>الحالة</th>
+          <th>الرد</th>
+          <th>الحضور</th>
+          <th>الإجراءات</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% guests.forEach(g => {
+          let pillClass = 'pending';
+          if (g.rsvp === 'حضور') pillClass = 'confirmed';
+          else if (g.rsvp === 'اعتذار') pillClass = 'declined';
+          else if (g.viewed_at) pillClass = 'viewed';
+          else if (g.status !== 'قيد الانتظار') pillClass = 'sent';
+
+          const inviteLink = baseUrl + '/invite/' + g.token;
+          const waText = encodeURIComponent('تشرفنا بدعوتكم لـ "' + event.title + '"، لعرض الدعوة والرد على الدعوة: ' + inviteLink);
+          const phoneDigits = (g.phone || '').replace(/[^0-9]/g, '');
+        %>
+        <tr>
+          <td><%= g.name %></td>
+          <td class="text-muted"><%= g.phone || '-' %></td>
+          <td><span class="pill <%= pillClass %>"><%= g.status %></span></td>
+          <td>
+            <% if (g.rsvp === 'حضور') { %> <span style="color:var(--success-text); font-weight:700;">حضور</span>
+            <% } else if (g.rsvp === 'اعتذار') { %> <span style="color:var(--danger-text); font-weight:700;">اعتذار</span>
+            <% } else { %> <span class="text-muted">بانتظار الرد</span> <% } %>
+          </td>
+          <td>
+            <% if (g.checked_in_at) { %> <span style="color:var(--success-text); font-weight:700;">حضر</span>
+            <% } else { %> <span class="text-muted">-</span> <% } %>
+          </td>
+          <td>
+            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+              <% if (phoneDigits) { %>
+                <a class="btn small" target="_blank" href="https://wa.me/<%= phoneDigits %>?text=<%= waText %>" onclick="markSent(<%= g.id %>)">إرسال واتساب</a>
+              <% } %>
+              <a class="btn secondary small" target="_blank" href="/invite/<%= g.token %>">معاينة الدعوة</a>
+              <a class="btn secondary small" target="_blank" href="/admin/guests/<%= g.id %>/qrcode.png">الباركود</a>
+              <form class="inline" method="POST" action="/admin/guests/<%= g.id %>/delete" onsubmit="return confirm('حذف هذا المدعو؟');">
+                <button class="btn danger small" type="submit">حذف</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+    <% } %>
+  </div>
+</div>
+
+<!-- نموذج مخفي لتحديث الحالة إلى "تم الإرسال" عند الضغط على زر واتساب -->
+<form id="status-form" method="POST" style="display:none;">
+  <input type="hidden" name="status" value="تم الإرسال">
+</form>
+<script>
+  function markSent(guestId) {
+    const form = document.getElementById('status-form');
+    form.action = '/admin/guests/' + guestId + '/status';
+    // نرسل الطلب بدون مغادرة الصفحة الحالية (يفتح واتساب في تبويب جديد أصلاً)
+    fetch(form.action, { method: 'POST', headers: {'Content-Type':'application/x-www-form-urlencoded'}, body: 'status=تم الإرسال' })
+      .then(() => setTimeout(() => location.reload(), 600));
+  }
+</script>
+<%- include('partials/footer') %>

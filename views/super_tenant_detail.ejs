@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/public/css/style.css">
+</head>
+<body>
+  <div class="topbar">
+    <a class="brand" href="/super-admin">لوحة المشرف العام</a>
+  </div>
+
+  <div class="container">
+    <div class="page-header">
+      <div>
+        <h1><%= tenant.name %></h1>
+        <div class="text-muted">
+          <%= tenant.custom_domain || tenant.subdomain %>
+          · <span class="pill <%= tenant.status === 'نشط' ? 'confirmed' : 'declined' %>"><%= tenant.status %></span>
+        </div>
+      </div>
+      <a class="btn secondary" href="/super-admin">رجوع</a>
+    </div>
+
+    <% if (flash) { %>
+      <div class="flash"><%= flash %></div>
+    <% } %>
+
+    <div class="stats-grid" style="grid-template-columns:repeat(2,1fr);">
+      <div class="stat-box"><div class="label">المناسبات</div><div class="value"><%= counts.events %></div></div>
+      <div class="stat-box"><div class="label">إجمالي المدعوين</div><div class="value"><%= counts.guests %></div></div>
+    </div>
+
+    <div class="actions-row">
+      <form class="inline" method="POST" action="/super-admin/tenants/<%= tenant.id %>/status">
+        <select name="status" onchange="this.form.submit()" style="padding:6px 10px;border-radius:8px;border:1px solid var(--border);font-family:inherit;">
+          <option value="نشط" <%= tenant.status === 'نشط' ? 'selected' : '' %>>نشط</option>
+          <option value="موقوف" <%= tenant.status === 'موقوف' ? 'selected' : '' %>>موقوف</option>
+        </select>
+      </form>
+      <form class="inline" method="POST" action="/super-admin/tenants/<%= tenant.id %>/delete" onsubmit="return confirm('تأكيد حذف هذا المستأجر بكل مناسباته وبياناته؟ لا يمكن التراجع.');">
+        <button class="btn danger small" type="submit">حذف المستأجر نهائيًا</button>
+      </form>
+    </div>
+
+    <div class="tabs-row">
+      <div class="card">
+        <div style="font-weight:700; margin-bottom:10px;">بيانات الحساب والنطاق</div>
+        <form method="POST" action="/super-admin/tenants/<%= tenant.id %>" class="form-grid">
+          <div>
+            <label>اسم النشاط</label>
+            <input type="text" name="name" value="<%= tenant.name %>" required>
+          </div>
+          <div>
+            <label>نطاق فرعي</label>
+            <input type="text" name="subdomain" value="<%= tenant.subdomain || '' %>">
+          </div>
+          <div>
+            <label>دومين مخصص</label>
+            <input type="text" name="custom_domain" value="<%= tenant.custom_domain || '' %>">
+          </div>
+          <div>
+            <label>الباقة</label>
+            <select name="plan">
+              <option value="تجريبي" <%= tenant.plan === 'تجريبي' ? 'selected' : '' %>>تجريبي</option>
+              <option value="أساسية" <%= tenant.plan === 'أساسية' ? 'selected' : '' %>>أساسية</option>
+              <option value="احترافية" <%= tenant.plan === 'احترافية' ? 'selected' : '' %>>احترافية</option>
+            </select>
+          </div>
+          <div>
+            <label>اللون الأساسي (كود Hex)</label>
+            <input type="text" name="primary_color" value="<%= tenant.primary_color %>">
+          </div>
+          <div>
+            <label>ملاحظات داخلية</label>
+            <textarea name="notes" rows="2"><%= tenant.notes || '' %></textarea>
+          </div>
+          <button class="btn small" type="submit">حفظ التعديلات</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <div style="font-weight:700; margin-bottom:10px;">الشعار</div>
+        <% if (tenant.logo_path) { %>
+          <img class="design-preview" src="<%= tenant.logo_path %>" style="max-height:80px; width:auto;">
+        <% } %>
+        <form method="POST" action="/super-admin/tenants/<%= tenant.id %>/logo" enctype="multipart/form-data" class="form-grid">
+          <input type="file" name="logo" accept="image/*" required>
+          <button class="btn secondary small" type="submit">رفع / تحديث الشعار</button>
+        </form>
+
+        <hr style="border:none; border-top:1px solid var(--border); margin:16px 0;">
+
+        <div style="font-weight:700; margin-bottom:10px;">ربط واتساب Cloud API (للإرسال الجماعي والتذكير التلقائي)</div>
+        <p class="text-muted" style="margin-bottom:10px;">من حساب Meta for Developers الخاص بالمستأجر - يحتاج رقم واتساب بزنس معتمد.</p>
+        <form method="POST" action="/super-admin/tenants/<%= tenant.id %>/whatsapp" class="form-grid">
+          <input type="text" name="wa_phone_number_id" placeholder="Phone Number ID" value="<%= tenant.wa_phone_number_id || '' %>">
+          <input type="text" name="wa_access_token" placeholder="Access Token" value="<%= tenant.wa_access_token || '' %>">
+          <button class="btn secondary small" type="submit">حفظ إعداد واتساب</button>
+        </form>
+        <div class="text-muted" style="margin-top:6px;">
+          <%= tenant.wa_phone_number_id ? 'مفعّل ✓' : 'غير مفعّل - الإرسال الجماعي والتذكير التلقائي معطّلين لحد ما يُربط' %>
+        </div>
+
+        <hr style="border:none; border-top:1px solid var(--border); margin:16px 0;">
+
+        <div style="font-weight:700; margin-bottom:10px;">رابط دخول لوحة هذا المستأجر</div>
+        <p class="text-muted" style="word-break:break-all;">
+          https://<%= tenant.custom_domain || (tenant.subdomain + '.' + 'دومين-المنصة') %>/login
+        </p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="font-weight:700; margin-bottom:10px;">حسابات دخول لوحة التحكم</div>
+      <table>
+        <thead><tr><th>اسم المستخدم</th><th>تاريخ الإنشاء</th><th>الإجراءات</th></tr></thead>
+        <tbody>
+          <% admins.forEach(a => { %>
+            <tr>
+              <td><%= a.username %></td>
+              <td class="text-muted"><%= a.created_at %></td>
+              <td>
+                <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+                  <form method="POST" action="/super-admin/tenants/<%= tenant.id %>/admins/<%= a.id %>/password" style="display:flex; gap:6px;">
+                    <input type="text" name="password" placeholder="كلمة مرور جديدة" style="width:140px; padding:6px 10px; border-radius:8px; border:1px solid var(--border); font-family:inherit;">
+                    <button class="btn secondary small" type="submit">تغيير</button>
+                  </form>
+                  <form method="POST" action="/super-admin/tenants/<%= tenant.id %>/admins/<%= a.id %>/delete" onsubmit="return confirm('حذف هذا الحساب؟');">
+                    <button class="btn danger small" type="submit">حذف</button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+      <hr style="border:none; border-top:1px solid var(--border); margin:16px 0;">
+      <form method="POST" action="/super-admin/tenants/<%= tenant.id %>/admins" class="form-grid" style="max-width:360px;">
+        <label style="margin:0;">إضافة حساب دخول جديد</label>
+        <input type="text" name="username" placeholder="اسم المستخدم" required>
+        <input type="text" name="password" placeholder="كلمة المرور" required>
+        <button class="btn small" type="submit">إضافة</button>
+      </form>
+    </div>
+  </div>
+</body>
+</html>

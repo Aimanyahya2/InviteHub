@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/public/css/style.css">
+</head>
+<body>
+  <div class="topbar">
+    <a class="brand" href="/super-admin">لوحة المشرف العام</a>
+  </div>
+
+  <div class="container" style="max-width:560px;">
+    <div class="page-header">
+      <h1>مستأجر جديد</h1>
+      <a class="btn secondary" href="/super-admin">رجوع</a>
+    </div>
+
+    <% if (error) { %>
+      <div class="error-msg"><%= error %></div>
+    <% } %>
+
+    <div class="card">
+      <form method="POST" action="/super-admin/tenants" class="form-grid">
+        <div>
+          <label>اسم النشاط / العميل *</label>
+          <input type="text" name="name" placeholder="مثال: استوديو لمسة لتصميم الدعوات" required>
+        </div>
+        <div>
+          <label>نطاق فرعي (اختياري إن ما عنده دومين خاص بعد)</label>
+          <input type="text" name="subdomain" placeholder="مثال: lamsa (بدون دومين المنصة)">
+        </div>
+        <div>
+          <label>دومين مخصص (اختياري)</label>
+          <input type="text" name="custom_domain" placeholder="مثال: invites.lamsa-studio.com">
+        </div>
+        <div>
+          <label>الباقة</label>
+          <select name="plan">
+            <option value="تجريبي">تجريبي</option>
+            <option value="أساسية">أساسية</option>
+            <option value="احترافية">احترافية</option>
+          </select>
+        </div>
+        <hr style="border:none; border-top:1px solid var(--border); margin:6px 0;">
+        <div>
+          <label>اسم مستخدم أدمن هذا المستأجر *</label>
+          <input type="text" name="admin_username" required>
+        </div>
+        <div>
+          <label>كلمة مرور أدمن هذا المستأجر *</label>
+          <input type="text" name="admin_password" required>
+        </div>
+        <button class="btn" type="submit" style="justify-content:center;">إنشاء المستأجر</button>
+      </form>
+    </div>
+  </div>
+</body>
+</html>

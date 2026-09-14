@@ -1,0 +1,76 @@
+<%- include('partials/header') %>
+<div class="container" style="max-width:560px;">
+  <div class="page-header">
+    <h1>مناسبة جديدة</h1>
+    <a class="btn secondary" href="/admin">رجوع</a>
+  </div>
+
+  <% if (error) { %>
+    <div class="error-msg"><%= error %></div>
+  <% } %>
+
+  <div class="card">
+    <form method="POST" action="/admin/events" class="form-grid">
+      <div>
+        <label>نوع المناسبة *</label>
+        <select name="event_type" id="event_type_select" required>
+          <option value="">اختر النوع</option>
+          <option value="زفاف">زفاف</option>
+          <option value="خطوبة">خطوبة</option>
+          <option value="تخرج">تخرج</option>
+          <option value="عيد ميلاد">عيد ميلاد</option>
+          <option value="مؤتمر">مؤتمر</option>
+          <option value="اجتماع عمل">اجتماع عمل</option>
+          <option value="فعالية خيرية">فعالية خيرية</option>
+          <option value="مناسبة رسمية">مناسبة رسمية</option>
+          <option value="__other__">نوع آخر (حدده بنفسك)</option>
+        </select>
+        <input type="text" name="event_type_custom" id="event_type_custom" placeholder="اكتب نوع المناسبة" style="display:none; margin-top:8px;">
+      </div>
+      <div>
+        <label>اسم المناسبة *</label>
+        <input type="text" name="title" placeholder="مثال: حفل زفاف - أسرة الغامدي" required>
+      </div>
+      <div>
+        <label>اسم العميل</label>
+        <input type="text" name="client_name">
+      </div>
+      <div>
+        <label>تاريخ المناسبة (نص للعرض، اختياري)</label>
+        <input type="text" name="event_date" placeholder="مثال: 12 ديسمبر 2026 - 8:00 مساءً">
+      </div>
+      <div>
+        <label>تاريخ ووقت المناسبة الفعلي *</label>
+        <input type="datetime-local" name="event_datetime" required>
+        <div class="text-muted" style="margin-top:4px;">يُستخدم لجدولة التذكير التلقائي - لازم يكون دقيق</div>
+      </div>
+      <div>
+        <label>إرسال التذكير قبل المناسبة بكم ساعة؟</label>
+        <select name="reminder_hours_before">
+          <option value="12">12 ساعة</option>
+          <option value="24" selected>24 ساعة (يوم واحد)</option>
+          <option value="48">48 ساعة (يومين)</option>
+          <option value="72">72 ساعة (3 أيام)</option>
+        </select>
+      </div>
+      <div>
+        <label>الموقع / القاعة</label>
+        <input type="text" name="location">
+      </div>
+      <div>
+        <label>رابط خريطة الموقع (اختياري)</label>
+        <input type="url" name="location_map_url" placeholder="https://maps.google.com/...">
+      </div>
+      <button class="btn" type="submit" style="justify-content:center;">إنشاء المناسبة</button>
+    </form>
+  </div>
+</div>
+<script>
+  const sel = document.getElementById('event_type_select');
+  const custom = document.getElementById('event_type_custom');
+  sel.addEventListener('change', () => {
+    custom.style.display = sel.value === '__other__' ? 'block' : 'none';
+    custom.required = sel.value === '__other__';
+  });
+</script>
+<%- include('partials/footer') %>

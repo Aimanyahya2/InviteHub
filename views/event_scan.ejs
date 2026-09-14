@@ -1,0 +1,65 @@
+<%- include('partials/header') %>
+<div class="container" style="max-width:480px;">
+  <div class="page-header">
+    <h1>تسجيل الحضور</h1>
+    <a class="btn secondary" href="/admin/events/<%= event.id %>">رجوع</a>
+  </div>
+
+  <div class="card" style="text-align:center;">
+    <div style="font-size:13px; color:var(--text-secondary);"><%= event.title %></div>
+    <div style="font-size:32px; font-weight:900; margin:6px 0;" id="count"><%= stats.checked_in %> / <%= stats.confirmed %></div>
+    <div class="text-muted">حضروا من المؤكدين</div>
+  </div>
+
+  <div class="card">
+    <div id="reader" style="width:100%;"></div>
+    <div id="result" style="margin-top:12px; padding:12px; border-radius:10px; text-align:center; font-weight:700; display:none;"></div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script>
+  const resultBox = document.getElementById('result');
+  const countBox = document.getElementById('count');
+  let busy = false;
+
+  function showResult(text, ok) {
+    resultBox.style.display = 'block';
+    resultBox.textContent = text;
+    resultBox.style.background = ok ? 'var(--success-bg)' : 'var(--danger-bg)';
+    resultBox.style.color = ok ? 'var(--success-text)' : 'var(--danger-text)';
+  }
+
+  async function onScanSuccess(decodedText) {
+    if (busy) return;
+    busy = true;
+    try {
+      const res = await fetch('/admin/checkin/' + encodeURIComponent(decodedText), { method: 'POST' });
+      const data = await res.json();
+      if (data.ok) {
+        showResult('تم تسجيل حضور: ' + data.name, true);
+        countBox.textContent = data.checked_in + ' / ' + data.total;
+      } else {
+        showResult(data.message || 'باركود غير صالح', false);
+      }
+    } catch (err) {
+      showResult('تعذّر الاتصال بالسيرفر', false);
+    }
+    setTimeout(() => { busy = false; }, 1800);
+  }
+
+  const scanner = new Html5Qrcode('reader');
+  Html5Qrcode.getCameras().then(cameras => {
+    if (cameras && cameras.length) {
+      const camId = cameras.find(c => /back|rear/i.test(c.label))?.id || cameras[cameras.length - 1].id;
+      scanner.start(camId, { fps: 10, qrbox: 220 }, onScanSuccess).catch(() => {
+        showResult('تعذّر تشغيل الكاميرا - تأكد من إعطاء الإذن', false);
+      });
+    } else {
+      showResult('ما فيه كاميرا متاحة على هذا الجهاز', false);
+    }
+  }).catch(() => {
+    showResult('يحتاج إذن الوصول للكاميرا', false);
+  });
+</script>
+<%- include('partials/footer') %>

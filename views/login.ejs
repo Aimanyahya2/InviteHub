@@ -1,0 +1,24 @@
+<%- include('partials/header') %>
+<div class="login-wrap">
+  <div class="login-box">
+    <h1><%= (typeof tenant !== 'undefined' && tenant) ? tenant.name : 'تسجيل الدخول' %></h1>
+    <% if (typeof tenant !== 'undefined' && tenant && tenant.logo_path) { %>
+      <div style="text-align:center; margin-bottom:16px;"><img src="<%= tenant.logo_path %>" alt="" style="height:48px;"></div>
+    <% } %>
+    <% if (error) { %>
+      <div class="error-msg"><%= error %></div>
+    <% } %>
+    <form method="POST" action="/login" class="form-grid">
+      <div>
+        <label>اسم المستخدم</label>
+        <input type="text" name="username" required autofocus>
+      </div>
+      <div>
+        <label>كلمة المرور</label>
+        <input type="password" name="password" required>
+      </div>
+      <button class="btn" type="submit" style="justify-content:center;">دخول</button>
+    </form>
+  </div>
+</div>
+<%- include('partials/footer') %>
